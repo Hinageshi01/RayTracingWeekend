@@ -9,9 +9,21 @@ class ExampleLayer : public Walnut::Layer
 {
 public:
 
-	virtual void OnUpdate(float ts) override
+	ExampleLayer() : m_camera(45.0f, 0.01f, 1000.0f)
 	{
 
+	}
+
+	virtual void OnUpdate(float ts) override
+	{
+		if (m_camera.OnUpdate(ts))
+		{
+
+		}
+		else
+		{
+
+		}
 	}
 
 	virtual void OnUIRender() override
@@ -42,8 +54,10 @@ public:
 	{
 		Walnut::Timer timer;
 
+		m_camera.OnResize(m_viewportWidth, m_viewportHeight);
+
 		m_renderer.OnResize(m_viewportWidth, m_viewportHeight);
-		m_renderer.Render();
+		m_renderer.Render(m_camera);
 
 		m_lastFrameTime = timer.ElapsedMillis();
 	}
@@ -54,6 +68,7 @@ private:
 	uint32_t m_viewportWidth = 0;
 	uint32_t m_viewportHeight = 0;
 
+	Camera m_camera;
 	Renderer m_renderer;
 };
 

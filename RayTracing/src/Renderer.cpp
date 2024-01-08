@@ -40,8 +40,11 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 	m_pFinalImageData = new uint32_t[width * height];
 }
 
-void Renderer::Render()
+void Renderer::Render(const Camera &camera)
 {
+	m_pCamera = &camera;
+	assert(m_pCamera && m_pFinalImage);
+
 	const uint32_t width = m_pFinalImage->GetWidth();
 	const uint32_t height = m_pFinalImage->GetHeight();
 
@@ -51,12 +54,42 @@ void Renderer::Render()
 		{
 			const size_t index = x + y * width;
 
-			float r = (float)x / (float)width;
-			float g = (float)y / (float)height;
-
-			m_pFinalImageData[index] = ConvertToRGBA8( glm::vec3{ r, g, 0.25f } );
+			glm::vec4 color = GenRay(x, y);
+			m_pFinalImageData[index] = ConvertToRGBA8( std::move(color) );
 		}
 	}
 
 	m_pFinalImage->SetData(m_pFinalImageData);
+}
+
+glm::vec4 Renderer::GenRay(uint32_t x, uint32_t y)
+{
+	const size_t pixelIndex = x + y * m_pFinalImage->GetWidth();
+
+	Ray ray;
+	ray.origin = m_pCamera->GetPosition();
+	ray.direction = m_pCamera->GetRayDirections()[pixelIndex];
+
+	glm::vec3 light = Miss(ray).color;
+	return glm::vec4{ std::move(light), 1.0f };
+}
+
+HitPayload Renderer::TraceRay(const Ray &ray)
+{
+	return HitPayload();
+}
+
+HitPayload Renderer::ClosestHit(const Ray &ray, float hitDistance, uint32_t objectIndex)
+{
+	return HitPayload();
+}
+
+HitPayload Renderer::Miss(const Ray &ray)
+{
+	HitPayload payload;
+
+	float t = 0.5 * (glm::normalize(ray.direction).y + 1.0f);
+	payload.color = glm::vec3{ 1.0f - t } + glm::vec3{ 0.5f, 0.7f, 1.0f } *t;
+
+	return payload;
 }
