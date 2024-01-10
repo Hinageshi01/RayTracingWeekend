@@ -58,7 +58,7 @@ void Renderer::Render(const Scene &scene, const Camera &camera)
 			const size_t index = x + y * width;
 
 			glm::vec4 color = GenRay(x, y);
-			m_pFinalImageData[index] = ConvertToRGBA8( std::move(color) );
+			m_pFinalImageData[index] = ConvertToRGBA8(std::move(color));
 		}
 	}
 
@@ -74,7 +74,6 @@ glm::vec4 Renderer::GenRay(uint32_t x, uint32_t y)
 	ray.direction = m_pCamera->GetRayDirections()[pixelIndex];
 
 	HitPayload payload = TraceRay(ray);
-
 	if (payload.hitDistance < 0.0f)
 	{
 		// Sky color
@@ -97,10 +96,10 @@ HitPayload Renderer::TraceRay(const Ray &ray)
 	{
 		const Sphere &sphere = m_pScene->spheres[index];
 
-		glm::vec3 origin = ray.origin - sphere.m_center;
+		glm::vec3 origin = ray.origin - sphere.center;
 		float a = glm::dot(ray.direction, ray.direction);
 		float b_half = glm::dot(origin, ray.direction);
-		float c = glm::dot(origin, origin) - sphere.m_radius * sphere.m_radius;
+		float c = glm::dot(origin, origin) - sphere.radius * sphere.radius;
 
 		float discriminant = b_half * b_half - a * c;
 		if (discriminant < 0.0f)
@@ -127,15 +126,12 @@ HitPayload Renderer::TraceRay(const Ray &ray)
 HitPayload Renderer::ClosestHit(const Ray &ray, float hitDistance, uint32_t objectIndex)
 {
 	HitPayload payload;
-	payload.objectIndex = objectIndex;
 	payload.hitDistance = hitDistance;
+	payload.objectIndex = objectIndex;
 
 	const Sphere &closestSphere = m_pScene->spheres[objectIndex];
-	glm::vec3 origin = ray.origin - closestSphere.m_center;
-	glm::vec3 hitPoint = origin + ray.direction * hitDistance;
-
-	payload.position = hitPoint + closestSphere.m_center;
-	payload.normal = glm::normalize(std::move(hitPoint));
+	payload.position = ray.Cast(hitDistance);
+	payload.normal = glm::normalize(payload.position - closestSphere.center);
 
 	return payload;
 }

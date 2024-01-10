@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Camera.h"
-#include "HitPayload.h"
-#include "Ray.h"
-#include "Sphere.h"
 #include "Scene.h"
 
 #include <glm/glm.hpp>
