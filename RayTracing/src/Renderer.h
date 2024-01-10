@@ -25,6 +25,9 @@ private:
 	HitPayload ClosestHit(const Ray &ray, float hitDistance, uint32_t objectIndex);
 	HitPayload Miss(const Ray &ray);
 
+	uint32_t m_bounces = 8;
+	uint32_t m_frameIndex = 1;
+
 	const Camera *m_pCamera = nullptr;
 	const Scene *m_pScene = nullptr;
 

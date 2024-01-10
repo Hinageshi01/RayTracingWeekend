@@ -20,6 +20,54 @@ __forceinline uint32_t ConvertToRGBA8(glm::vec3 vec3Color)
 	return ConvertToRGBA8(glm::vec4{ std::move(vec3Color) , 1.0f});
 }
 
+__forceinline glm::vec3 GammaCorrection(const glm::vec3 &color)
+{
+	constexpr float power = 1.0f / 2.2f;
+
+	return glm::vec3{ std::pow(color.x, power),
+		std::pow(color.y, power),
+		std::pow(color.z, power) };
+}
+
+__forceinline glm::vec4 GammaCorrection(const glm::vec4 &color)
+{
+	return glm::vec4{ GammaCorrection(glm::vec3{color}), color.w };
+}
+
+__forceinline uint32_t PCG_Hash(uint32_t input)
+{
+	uint32_t state = input * 747796405u + 2891336453u;
+	uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+	return (word >> 22u) ^ word;
+}
+
+__forceinline float RandomFloat(uint32_t &seed)
+{
+	seed = PCG_Hash(seed);
+	return (float)seed / (float)std::numeric_limits<uint32_t>::max();
+}
+
+__forceinline glm::vec3 RandomUnitSphere(uint32_t &seed)
+{
+	return glm::normalize(glm::vec3{
+		RandomFloat(seed) * 2.0f - 1.0f,
+		RandomFloat(seed) * 2.0f - 1.0f,
+		RandomFloat(seed) * 2.0f - 1.0f });
+}
+
+__forceinline glm::vec3 RandomHemisphereSphere(uint32_t &seed, glm::vec3 normal)
+{
+	glm::vec3 unitSphere = RandomUnitSphere(seed);
+	if (glm::dot(unitSphere, normal) > 0.0f)
+	{
+		return unitSphere;
+	}
+	else
+	{
+		return -unitSphere;
+	}
+}
+
 }
 
 void Renderer::OnResize(uint32_t width, uint32_t height)
@@ -58,9 +106,11 @@ void Renderer::Render(const Scene &scene, const Camera &camera)
 			const size_t index = x + y * width;
 
 			glm::vec4 color = GenRay(x, y);
-			m_pFinalImageData[index] = ConvertToRGBA8(std::move(color));
+			m_pFinalImageData[index] = ConvertToRGBA8(GammaCorrection(color));
 		}
 	}
+
+	++m_frameIndex;
 
 	m_pFinalImage->SetData(m_pFinalImageData);
 }
@@ -73,18 +123,32 @@ glm::vec4 Renderer::GenRay(uint32_t x, uint32_t y)
 	ray.origin = m_pCamera->GetPosition();
 	ray.direction = m_pCamera->GetRayDirections()[pixelIndex];
 
-	HitPayload payload = TraceRay(ray);
-	if (payload.hitDistance < 0.0f)
+	glm::vec3 light{ 0.0f };
+	glm::vec3 contribution{ 1.0f };
+	uint32_t seed = pixelIndex * m_frameIndex;
+	for (uint32_t i = 0; i < m_bounces; ++i)
 	{
-		// Sky color
-		float tmp = 0.5 * (glm::normalize(ray.direction).y + 1.0f);
-		glm::vec3 color = glm::vec3{ 1.0f - tmp } + glm::vec3{ 0.5f, 0.7f, 1.0f } * tmp;
-		return glm::vec4{ color, 1.0f };
+		seed += i;
+
+		HitPayload payload = TraceRay(ray);
+		if (payload.hitDistance < 0.0f)
+		{
+			// Sky color
+			float tmp = 0.5 * (glm::normalize(ray.direction).y + 1.0f);
+			light += (glm::vec3{ 1.0f - tmp } + glm::vec3{ 0.5f, 0.7f, 1.0f } *tmp) * contribution;
+			break;
+		}
+
+		const Sphere &sphere = m_pScene->spheres[payload.objectIndex];
+
+		contribution *= 0.5f;
+
+		// Avoid intersecting with current object.
+		ray.origin = payload.position + payload.normal * 0.0001f;
+		ray.direction = glm::reflect(ray.direction, payload.normal + RandomUnitSphere(seed));
 	}
 
-	// const Sphere &sphere = m_pScene->spheres[payload.objectIndex];
-
-	return glm::vec4{ payload.normal * 0.5f + glm::vec3{ 0.5 }, 1.0f };
+	return glm::vec4{ light, 1.0f };
 }
 
 HitPayload Renderer::TraceRay(const Ray &ray)

@@ -10,7 +10,7 @@ class ExampleLayer : public Walnut::Layer
 {
 public:
 
-	ExampleLayer() : m_camera(90.0f, 0.01f, 1000.0f)
+	ExampleLayer() : m_camera(45.0f, 0.01f, 1000.0f)
 	{
 		m_scene.spheres.emplace_back(glm::vec3{ 0.0f,0.0f, -1.0f }, 0.5f);
 		m_scene.spheres.emplace_back(glm::vec3{ 0.0f,-100.5f,-1.0f }, 100.0f);
