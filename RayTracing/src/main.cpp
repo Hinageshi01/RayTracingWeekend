@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "Scene.h"
 
 #include <Walnut/Application.h>
 #include <Walnut/EntryPoint.h>
@@ -11,7 +12,8 @@ public:
 
 	ExampleLayer() : m_camera(90.0f, 0.01f, 1000.0f)
 	{
-
+		m_scene.spheres.emplace_back(glm::vec3{ 0.0f,0.0f, -1.0f }, 0.5f);
+		m_scene.spheres.emplace_back(glm::vec3{ 0.0f,-100.5f,-1.0f }, 100.0f);
 	}
 
 	virtual void OnUpdate(float ts) override
@@ -57,7 +59,7 @@ public:
 		m_camera.OnResize(m_viewportWidth, m_viewportHeight);
 
 		m_renderer.OnResize(m_viewportWidth, m_viewportHeight);
-		m_renderer.Render(m_camera);
+		m_renderer.Render(m_scene, m_camera);
 
 		m_lastFrameTime = timer.ElapsedMillis();
 	}
@@ -70,6 +72,7 @@ private:
 
 	Camera m_camera;
 	Renderer m_renderer;
+	Scene m_scene;
 };
 
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
