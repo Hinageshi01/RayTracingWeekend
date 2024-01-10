@@ -10,8 +10,8 @@ using namespace Walnut;
 Camera::Camera(float verticalFOV, float nearClip, float farClip)
 	: m_VerticalFOV(verticalFOV), m_NearClip(nearClip), m_FarClip(farClip)
 {
-	m_ForwardDirection = glm::vec3{ 0.0f, -0.2f, -1.0f };
-	m_Position = glm::vec3{ 0.0f, 2.0f, 8.0f };
+	m_ForwardDirection = glm::vec3{ 0.0f, 0.0f, -1.0f };
+	m_Position = glm::vec3{ 0.0f, 0.0f, 0.0f };
 
 	RecalculateView();
 }
@@ -129,7 +129,8 @@ void Camera::RecalculateRayDirections()
 			glm::vec2 coord = { (float)x / (float)m_ViewportWidth, (float)y / (float)m_ViewportHeight };
 			coord = coord * 2.0f - 1.0f; // -1 -> 1
 
-			glm::vec4 target = m_InverseProjection * glm::vec4(coord.x, coord.y, 1.0f, 1.0f);
+			// Left Hand
+			glm::vec4 target = m_InverseProjection * glm::vec4(coord.x, coord.y, -1.0f, 1.0f);
 			glm::vec3 rayDirection = glm::vec3(m_InverseView * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0)); // World space
 			m_RayDirections[x + y * m_ViewportWidth] = std::move(rayDirection);
 		}

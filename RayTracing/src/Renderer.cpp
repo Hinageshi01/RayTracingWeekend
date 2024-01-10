@@ -18,6 +18,20 @@ __forceinline uint32_t ConvertToRGBA8(glm::vec3 vec3Color)
 	return ConvertToRGBA8(glm::vec4{ std::move(vec3Color) , 1.0f});
 }
 
+bool HitSphere(const glm::vec3 &center, double radius, const Ray &r)
+{
+	// (P - C) dot (P - C) = r^2
+	// t^2b dot b + 2tb dot (O - C) + (O - C) dot (O - C) - r^2 = 0
+
+	glm::vec3 oc = r.origin - center;
+	float a = glm::dot(r.direction, r.direction);
+	float b = 2.0f * glm::dot(r.direction, oc);
+	float c = glm::dot(oc, oc) - radius * radius;
+	float discriminant = b * b - 4.0f * a * c;
+
+	return discriminant > 0.0f;
+}
+
 }
 
 void Renderer::OnResize(uint32_t width, uint32_t height)
@@ -70,8 +84,12 @@ glm::vec4 Renderer::GenRay(uint32_t x, uint32_t y)
 	ray.origin = m_pCamera->GetPosition();
 	ray.direction = m_pCamera->GetRayDirections()[pixelIndex];
 
-	glm::vec3 light = Miss(ray).color;
-	return glm::vec4{ std::move(light), 1.0f };
+	if (HitSphere(glm::vec3{ 0.0f, 0.0f, -1.0f }, 0.5f, ray))
+	{
+		return glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f };
+	}
+
+	return glm::vec4{ Miss(ray).color, 1.0f };
 }
 
 HitPayload Renderer::TraceRay(const Ray &ray)

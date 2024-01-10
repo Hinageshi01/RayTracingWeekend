@@ -9,7 +9,7 @@ class ExampleLayer : public Walnut::Layer
 {
 public:
 
-	ExampleLayer() : m_camera(45.0f, 0.01f, 1000.0f)
+	ExampleLayer() : m_camera(90.0f, 0.01f, 1000.0f)
 	{
 
 	}
