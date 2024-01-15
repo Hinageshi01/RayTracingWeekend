@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+inline constexpr uint32_t INVALID_INDEX = std::numeric_limits<uint32_t>::max();
+
 struct Ray
 {
 	glm::vec3 Cast(float t) const
@@ -23,11 +25,23 @@ struct Material
 	// ·µ»Ø BRDF¡£
 	glm::vec3 Eval(const glm::vec3 &wi, const glm::vec3 &wo, const glm::vec3 &N) { return {}; };
 
+	float SnellSchlick(float cos, float idx) const
+	{
+		float r0 = (1.0f - idx) / (1.0f + idx);
+		r0 = r0 * r0;
+		return r0 + (1.0f - r0) * pow((1.0f - cos), 5);
+	}
+
 	glm::vec3 albedo{ 1.0f, 1.0f , 1.0f };
 	float roughness = 0.9f;
 	float metallic = 0.1f;
+
 	glm::vec3 emissiveColor{ 0.0f, 0.0f, 0.0f };
 	float emissiveIntensity = 0.0f;
+
+	// TODO : Change it to float
+	bool isTransparent = false;
+	float eta = 1.0f;
 };
 
 struct HitPayload
@@ -36,8 +50,8 @@ struct HitPayload
 	glm::vec3 normal;
 	float hitDistance;
 
-	uint32_t objectIndex;
-	uint32_t materialIndex;
+	uint32_t objectIndex = INVALID_INDEX;
+	uint32_t materialIndex = INVALID_INDEX;
 };
 
 class Hittable
@@ -57,8 +71,6 @@ struct Sphere
 
 struct Scene
 {
-	static constexpr uint32_t InvalidIndex = std::numeric_limits<uint32_t>::max();
-
 	std::vector<Sphere> spheres;
 	std::vector<Material> materials;
 };

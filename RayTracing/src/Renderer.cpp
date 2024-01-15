@@ -144,9 +144,19 @@ glm::vec4 Renderer::GenRay(uint32_t x, uint32_t y)
 
 		contribution *= material.albedo;
 
-		// Avoid intersecting with current object.
-		ray.origin = payload.position + payload.normal * 0.0001f;
-		ray.direction = glm::reflect(ray.direction, payload.normal + RandomUnitSphere(seed) * material.roughness);
+		const float refractionRatio = 1.0f / material.eta;
+		const float cosTheta = std::max(glm::dot(-ray.direction, payload.normal), 0.0f);
+		if (!material.isTransparent || material.SnellSchlick(cosTheta, refractionRatio) > RandomFloat(seed))
+		{
+			// 无法产生折射
+			ray.origin = payload.position + payload.normal * 0.0001f;
+			ray.direction = glm::reflect(ray.direction, payload.normal + RandomUnitSphere(seed) * material.roughness);
+		}
+		else
+		{
+			ray.origin = payload.position;
+			ray.direction = glm::refract(-ray.direction, payload.normal, refractionRatio);
+		}
 	}
 
 	return glm::vec4{ light, 1.0f };
@@ -154,7 +164,7 @@ glm::vec4 Renderer::GenRay(uint32_t x, uint32_t y)
 
 HitPayload Renderer::TraceRay(const Ray &ray)
 {
-	uint32_t closestSphereIndex = Scene::InvalidIndex;
+	uint32_t closestSphereIndex = INVALID_INDEX;
 	float hitDistance = std::numeric_limits<float>::max();
 
 	for (size_t index = 0; index < m_pScene->spheres.size(); ++index)
@@ -180,7 +190,7 @@ HitPayload Renderer::TraceRay(const Ray &ray)
 		}
 	}
 
-	if (Scene::InvalidIndex == closestSphereIndex)
+	if (INVALID_INDEX == closestSphereIndex)
 	{
 		return Miss(ray);
 	}

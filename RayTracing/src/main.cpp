@@ -20,6 +20,10 @@ public:
 		material.albedo = glm::vec3{ 1.0f, 0.0f, 0.8f };
 		material.roughness = 1.0f;
 		material.metallic = 0.0f;
+		material.emissiveColor = glm::vec3{ 0.0f, 0.0f , 0.0f };
+		material.emissiveIntensity = 0.0f;
+		material.isTransparent = false;
+		material.eta = 1.0f;
 		m_scene.materials.emplace_back(std::move(material));
 		sphere.materialIndex = m_scene.materials.size() - 1;
 		sphere.center = glm::vec3{ -0.5f, 0.0f, -1.0f };
@@ -30,16 +34,38 @@ public:
 		material.albedo = glm::vec3{ 1.0f, 1.0f, 1.0f };
 		material.roughness = 0.0f;
 		material.metallic = 1.0f;
+		material.emissiveColor = glm::vec3{ 0.0f, 0.0f , 0.0f };
+		material.emissiveIntensity = 0.0f;
+		material.isTransparent = false;
+		material.eta = 1.0f;
 		m_scene.materials.emplace_back(std::move(material));
 		sphere.materialIndex = m_scene.materials.size() - 1;
 		sphere.center = glm::vec3{ 0.5f, 0.0f, -1.0f };
 		sphere.radius = 0.5f;
 		m_scene.spheres.emplace_back(std::move(sphere));
 
+		// Glass Sphere
+		material.albedo = glm::vec3{ 1.0f, 1.0f, 1.0f };
+		material.roughness = 0.0f;
+		material.metallic = 0.0f;
+		material.emissiveColor = glm::vec3{ 0.0f, 0.0f , 0.0f };
+		material.emissiveIntensity = 0.0f;
+		material.isTransparent = true;
+		material.eta = 1.52f; // Water
+		m_scene.materials.emplace_back(std::move(material));
+		sphere.materialIndex = m_scene.materials.size() - 1;
+		sphere.center = glm::vec3{ 0.0f, -0.2f, 0.2f };
+		sphere.radius = 0.1f;
+		m_scene.spheres.emplace_back(std::move(sphere));
+
 		// Ground
 		material.albedo = glm::vec3{ 0.5f, 0.5f, 0.5f };
 		material.roughness = 1.0f;
 		material.metallic = 0.0f;
+		material.emissiveColor = glm::vec3{ 0.0f, 0.0f , 0.0f };
+		material.emissiveIntensity = 0.0f;
+		material.isTransparent = false;
+		material.eta = 1.0f;
 		m_scene.materials.emplace_back(std::move(material));
 		sphere.materialIndex = m_scene.materials.size() - 1;
 		sphere.center = glm::vec3{ 0.0f, -100.5f, -1.0f };
