@@ -146,9 +146,11 @@ glm::vec4 Renderer::GenRay(uint32_t x, uint32_t y)
 
 		const float refractionRatio = 1.0f / material.eta;
 		const float cosTheta = std::max(glm::dot(-ray.direction, payload.normal), 0.0f);
-		if (!material.isTransparent || material.SnellSchlick(cosTheta, refractionRatio) > RandomFloat(seed))
+		const float sinTheta = std::sqrt(1.0 - cosTheta * cosTheta);
+		if (!material.isTransparent ||
+			refractionRatio * sinTheta > 1.0f ||
+			material.SnellSchlick(cosTheta, refractionRatio) > RandomFloat(seed))
 		{
-			// 无法产生折射
 			ray.origin = payload.position + payload.normal * 0.0001f;
 			ray.direction = glm::reflect(ray.direction, payload.normal + RandomUnitSphere(seed) * material.roughness);
 		}

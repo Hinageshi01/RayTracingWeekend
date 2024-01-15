@@ -18,11 +18,8 @@ struct Ray
 
 struct Material
 {
-	// 返回出射光线的方向。
 	glm::vec3 Sample(const glm::vec3 &wi, const glm::vec3 &N) { return {}; };
-	// 返回采样的 PDF。
 	float PDF(const glm::vec3 &wi, const glm::vec3 &wo, const glm::vec3 &N) { return {}; };
-	// 返回 BRDF。
 	glm::vec3 Eval(const glm::vec3 &wi, const glm::vec3 &wo, const glm::vec3 &N) { return {}; };
 
 	float SnellSchlick(float cos, float idx) const
