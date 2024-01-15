@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "Scene.h"
 
+#include <glm/gtc/type_ptr.hpp>
 #include <Walnut/Application.h>
 #include <Walnut/EntryPoint.h>
 #include <Walnut/Image.h>
@@ -60,9 +61,48 @@ public:
 
 	virtual void OnUIRender() override
 	{
+		bool needReset = false;
+		auto CheckReset = [&needReset](bool reset)
+		{
+			if (reset)
+			{
+				needReset = true;
+			}
+		};
+
 		// Settings
 		ImGui::Begin("Setting");
 		ImGui::Text("Last Frame: %.3fms", m_lastFrameTime);
+		ImGui::End();
+
+		// Object List
+		ImGui::Begin("Objects");
+		for (size_t i = 0; i < m_scene.spheres.size(); ++i)
+		{
+			ImGui::PushID(i);
+			Sphere &sphere = m_scene.spheres[i];
+			CheckReset(ImGui::DragFloat3("Position", glm::value_ptr(sphere.center), 0.01f));
+			CheckReset(ImGui::DragFloat("Radius", &sphere.radius, 0.01f, 0.0f, 100.0f));
+			CheckReset(ImGui::DragInt("Material", &sphere.materialIndex, 1, 0, (int)m_scene.materials.size() - 1));
+			ImGui::Separator();
+			ImGui::PopID();
+		}
+		ImGui::End();
+
+		// Material List
+		ImGui::Begin("Materials");
+		for (size_t i = 0; i < m_scene.materials.size(); ++i)
+		{
+			Material &material = m_scene.materials[i];
+			ImGui::PushID(i);
+			CheckReset(ImGui::ColorEdit3("Albedo", glm::value_ptr(material.albedo)));
+			CheckReset(ImGui::DragFloat("Roughness", &material.roughness, 0.01f, 0.0f, 1.0f));
+			CheckReset(ImGui::DragFloat("Metallic", &material.metallic, 0.01f, 0.0f, 1.0f));
+			CheckReset(ImGui::ColorEdit3("Emissive Color", glm::value_ptr(material.emissiveColor)));
+			CheckReset(ImGui::DragFloat("Emissive Intensity", &material.emissiveIntensity, 0.01f, 0.0f, 100.0f));
+			ImGui::Separator();
+			ImGui::PopID();
+		}
 		ImGui::End();
 
 		// Scene View
@@ -78,6 +118,11 @@ public:
 		}
 		ImGui::End();
 		ImGui::PopStyleVar();
+
+		if (needReset)
+		{
+			
+		}
 
 		Render();
 	}

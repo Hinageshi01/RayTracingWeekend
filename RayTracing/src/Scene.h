@@ -26,6 +26,8 @@ struct Material
 	glm::vec3 albedo{ 1.0f, 1.0f , 1.0f };
 	float roughness = 0.9f;
 	float metallic = 0.1f;
+	glm::vec3 emissiveColor{ 0.0f, 0.0f, 0.0f };
+	float emissiveIntensity = 0.0f;
 };
 
 struct HitPayload
@@ -47,7 +49,7 @@ public:
 // class Sphere : public HittableI
 struct Sphere
 {
-	uint32_t materialIndex;
+	int materialIndex;
 	
 	glm::vec3 center;
 	float radius;
