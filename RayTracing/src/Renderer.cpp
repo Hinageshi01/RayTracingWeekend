@@ -1,5 +1,6 @@
 #include "Renderer.h"
 
+#include <execution>
 #include <iostream>
 
 namespace
@@ -88,6 +89,29 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 
 	delete[] m_pFinalImageData;
 	m_pFinalImageData = new uint32_t[width * height];
+
+	delete[] m_pAccumulateData;
+	m_pAccumulateData = new glm::vec4[width * height];
+
+	m_frameIndex = 1;
+	std::memset(m_pAccumulateData, 0, width * height * sizeof(glm::vec4));
+
+	m_imageHorizontalIter.resize(width);
+	for (uint32_t i = 0; i < width; ++i)
+	{
+		m_imageHorizontalIter[i] = i;
+	}
+	m_imageVerticallIter.resize(height);
+	for (uint32_t i = 0; i < height; ++i)
+	{
+		m_imageVerticallIter[i] = i;
+	}
+}
+
+void Renderer::ResetAccumulate()
+{
+	m_frameIndex = 1;
+	std::memset(m_pAccumulateData, 0, m_pFinalImage->GetWidth() * m_pFinalImage->GetHeight() * sizeof(glm::vec4));
 }
 
 void Renderer::Render(const Scene &scene, const Camera &camera)
@@ -96,23 +120,48 @@ void Renderer::Render(const Scene &scene, const Camera &camera)
 	m_pScene = &scene;
 	assert(m_pCamera && m_pScene && m_pFinalImage);
 
-	const uint32_t width = m_pFinalImage->GetWidth();
-	const uint32_t height = m_pFinalImage->GetHeight();
-
-	for (uint32_t y = 0; y < height; ++y)
+	static bool s_lastFrameAccumulateState = m_isAccumulate;
+	if (!m_isAccumulate || !s_lastFrameAccumulateState)
 	{
-		for (uint32_t x = 0; x < width; ++x)
-		{
-			const size_t index = x + y * width;
-
-			glm::vec4 color = GenRay(x, y);
-			m_pFinalImageData[index] = ConvertToRGBA8(GammaCorrection(color));
-		}
+		// Clear accumulate
+		m_frameIndex = 1;
+		std::memset(m_pAccumulateData, 0, m_pFinalImage->GetWidth() * m_pFinalImage->GetHeight() * sizeof(glm::vec4));
 	}
 
-	++m_frameIndex;
+#define PARALLEL 1
+
+#if PARALLEL
+	std::for_each(std::execution::par, m_imageVerticallIter.begin(), m_imageVerticallIter.end(),
+		[this](uint32_t y)
+		{
+			const uint32_t imageWidth = m_pFinalImage->GetWidth();
+			for (uint32_t x = 0; x < imageWidth; ++x)
+			{
+				const size_t index = x + y * imageWidth;
+				m_pAccumulateData[index] += GammaCorrection(GenRay(x, y));
+				m_pFinalImageData[index] = ConvertToRGBA8(m_pAccumulateData[index] / static_cast<float>(m_frameIndex));
+			}
+});
+#else
+	for (uint32_t y = 0; y < imageHeight; ++y)
+	{
+		for (uint32_t x = 0; x < imageWidth; ++x)
+		{
+			const size_t index = x + y * imageWidth;
+			m_pAccumulateData[index] += PerPixel(x, y);
+			m_pFinalImageData[index] = ConvertToRGBA8(m_pAccumulateData[index] / static_cast<float>(m_frameIndex));
+		}
+	}
+#endif
 
 	m_pFinalImage->SetData(m_pFinalImageData);
+
+	if (m_isAccumulate)
+	{
+		++m_frameIndex;
+	}
+
+	s_lastFrameAccumulateState = m_isAccumulate;
 }
 
 glm::vec4 Renderer::GenRay(uint32_t x, uint32_t y)

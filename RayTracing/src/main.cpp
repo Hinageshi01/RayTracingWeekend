@@ -77,11 +77,11 @@ public:
 	{
 		if (m_camera.OnUpdate(ts))
 		{
-
+			m_renderer.StopAccumulate();
 		}
 		else
 		{
-
+			m_renderer.StartAccumulate();
 		}
 	}
 
@@ -99,6 +99,8 @@ public:
 		// Settings
 		ImGui::Begin("Setting");
 		ImGui::Text("Last Frame: %.3fms", m_lastFrameTime);
+		ImGui::Separator();
+		CheckReset(ImGui::DragInt("Bounces", &m_renderer.GetBounces(), 0.05f, 0, 32));
 		ImGui::End();
 
 		// Object List
@@ -147,7 +149,7 @@ public:
 
 		if (needReset)
 		{
-			
+			m_renderer.StopAccumulate();
 		}
 
 		Render();
