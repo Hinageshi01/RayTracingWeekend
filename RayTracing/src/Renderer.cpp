@@ -140,12 +140,13 @@ glm::vec4 Renderer::GenRay(uint32_t x, uint32_t y)
 		}
 
 		const Sphere &sphere = m_pScene->spheres[payload.objectIndex];
+		const Material &material = m_pScene->materials[sphere.materialIndex];
 
-		contribution *= 0.5f;
+		contribution *= material.albedo;
 
 		// Avoid intersecting with current object.
 		ray.origin = payload.position + payload.normal * 0.0001f;
-		ray.direction = glm::reflect(ray.direction, payload.normal + RandomUnitSphere(seed));
+		ray.direction = glm::reflect(ray.direction, payload.normal + RandomUnitSphere(seed) * material.roughness);
 	}
 
 	return glm::vec4{ light, 1.0f };

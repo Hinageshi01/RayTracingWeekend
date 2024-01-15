@@ -12,8 +12,38 @@ public:
 
 	ExampleLayer() : m_camera(45.0f, 0.01f, 1000.0f)
 	{
-		m_scene.spheres.emplace_back(glm::vec3{ 0.0f,0.0f, -1.0f }, 0.5f);
-		m_scene.spheres.emplace_back(glm::vec3{ 0.0f,-100.5f,-1.0f }, 100.0f);
+		Material material;
+		Sphere sphere;
+
+		// Pink Sphere
+		material.albedo = glm::vec3{ 1.0f, 0.0f, 0.8f };
+		material.roughness = 1.0f;
+		material.metallic = 0.0f;
+		m_scene.materials.emplace_back(std::move(material));
+		sphere.materialIndex = m_scene.materials.size() - 1;
+		sphere.center = glm::vec3{ -0.5f, 0.0f, -1.0f };
+		sphere.radius = 0.5f;
+		m_scene.spheres.emplace_back(std::move(sphere));
+		
+		// Mirror Sphere
+		material.albedo = glm::vec3{ 1.0f, 1.0f, 1.0f };
+		material.roughness = 0.0f;
+		material.metallic = 1.0f;
+		m_scene.materials.emplace_back(std::move(material));
+		sphere.materialIndex = m_scene.materials.size() - 1;
+		sphere.center = glm::vec3{ 0.5f, 0.0f, -1.0f };
+		sphere.radius = 0.5f;
+		m_scene.spheres.emplace_back(std::move(sphere));
+
+		// Ground
+		material.albedo = glm::vec3{ 0.5f, 0.5f, 0.5f };
+		material.roughness = 1.0f;
+		material.metallic = 0.0f;
+		m_scene.materials.emplace_back(std::move(material));
+		sphere.materialIndex = m_scene.materials.size() - 1;
+		sphere.center = glm::vec3{ 0.0f, -100.5f, -1.0f };
+		sphere.radius = 100.0f;
+		m_scene.spheres.emplace_back(std::move(sphere));
 	}
 
 	virtual void OnUpdate(float ts) override
