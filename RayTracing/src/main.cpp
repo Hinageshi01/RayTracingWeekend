@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "Scene.h"
+#include "Utils.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <Walnut/Application.h>
